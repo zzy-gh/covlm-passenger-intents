@@ -47,9 +47,14 @@ cat <<'EOF'
 == one manual step left
 In simulation/leaderboard/team_code/agent_config/covlm.yaml, add this line to
 the cov2v section (next to jpeg_quality) -- diffs/covlm.yaml.patch is the same
-change, config/covlm.yaml.example is the finished file:
+change:
 
   driver_intents_path: simulation/leaderboard/team_code/agent_config/driver_intents_nav.yaml
+
+On a newly created API key, also set a reachable model, because upstream's
+gemini-2.5-flash default answers 404 NOT_FOUND:
+
+  model: gemini-3.5-flash-lite
 
 Then run a scenario (see README.md):
   CUDA_VISIBLE_DEVICES=0 bash scripts/eval/eval_driving.sh \

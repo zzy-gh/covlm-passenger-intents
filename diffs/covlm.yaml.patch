@@ -1,6 +1,17 @@
 --- a/simulation/leaderboard/team_code/agent_config/covlm.yaml
 +++ b/simulation/leaderboard/team_code/agent_config/covlm.yaml
-@@ -104,6 +104,11 @@
+@@ -89,7 +89,9 @@
+     provider: gemini
+     gemini_api_key: ''
+     qwen_api_key: ''
+-    model: gemini-2.5-flash
++    # gemini-2.5-* is no longer served to API keys created after it was
++    # retired (404 NOT_FOUND); any gemini-3.x model works.
++    model: gemini-3.5-flash-lite
+     base_url: 
+     extra_body:
+         enable_thinking: false
+@@ -104,6 +106,11 @@
      retry_wait_sec: 10.0
      retry_attempts: 0
      jpeg_quality: 85

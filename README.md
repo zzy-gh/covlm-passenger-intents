@@ -17,6 +17,14 @@ Then add one line to the `cov2v` section of
     driver_intents_path: simulation/leaderboard/team_code/agent_config/driver_intents_nav.yaml
 ```
 
+Also check the model, because upstream's default no longer resolves for newer
+API keys — `gemini-2.5-flash` answers `404 NOT_FOUND ... no longer available to
+new users`. Any `gemini-3.x` model works:
+
+```yaml
+    model: gemini-3.5-flash-lite
+```
+
 ## Run
 
 From the CoLMDriver-main root, in the CARLA environment, CARLA already running.
@@ -47,10 +55,17 @@ Notes:
 | `add/.../data/Interdrive/r*_nav/` | new — 46 route directories matching the sentences |
 | `replace/.../cov2v_bridge.py` | **required** — loads `driver_intents_path` per scenario, keyed by `ROUTES_DIR` |
 | `replace/cov2v/prompting.py` | **required** — drops `urgency level` / `priority bonus` from the prompt when they are 0 |
+| `replace/cov2v/gemini_negotiator.py` | **required on a gemini-3.x model** — upstream hardcodes `thinking_budget=0`, which 3.x rejects with `400 INVALID_ARGUMENT` on every call; this picks `thinking_level="low"` for 3.x and leaves 2.x untouched |
 | `replace/scripts/eval/eval_mode.sh` | adds `ROUTE_SUFFIX`, one line; without it the script is unchanged |
 | `replace/.../covlm_agent.py` | recommended — uses the loaded intents, logs `priority_score` |
 
 `apply.sh` backs up each replaced file as `<name>.orig_backup`. `covlm.yaml` is
-not overwritten (your API keys live there); `config/covlm.yaml.example` is the
-finished file and `diffs/` has the per-file diffs against the untouched repo.
-Authentication is unchanged from upstream — set `gemini_api_key` as usual.
+not overwritten (your API keys live there), and `diffs/` has the per-file diffs
+against the untouched repo — use those instead of `replace/` if your checkout
+has its own changes to any of these files. Authentication is unchanged from
+upstream: set `gemini_api_key` as usual.
+
+Also upstream's own, and unrelated to these intents: `python_bin` in
+`covlm.yaml` points at the author's home directory, so set it to your
+`cov2v-gemini` environment, and `external_paths/carla_root` has to be a symlink
+to a CARLA 0.9.10 install.
