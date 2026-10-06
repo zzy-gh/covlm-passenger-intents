@@ -1,6 +1,6 @@
-# Navigation-intent passenger utterances for CoVLM / InterDrive
+# Passenger intents including urgency info for CoVLM / InterDrive
 
-InterDrive r1-r46 with passenger utterances whose destination follows from the
+InterDrive r1-r46 with passenger intents whose destination follows from the
 words, keeping each vehicle's original urgency tier. 175 vehicles, one sentence
 each.
 
