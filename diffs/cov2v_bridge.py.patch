@@ -1,0 +1,79 @@
+--- a/simulation/leaderboard/team_code/cov2v_bridge.py
++++ b/simulation/leaderboard/team_code/cov2v_bridge.py
+@@ -7,6 +7,7 @@
+ from pathlib import Path
+ 
+ import cv2
++import yaml
+ 
+ 
+ class CoV2VBridge(object):
+@@ -19,6 +20,7 @@
+         self._process = None
+         self._runtime_scene_dir = None
+         self._worker_cwd = None
++        self.driver_intents = {}
+ 
+         if not self.enabled:
+             return
+@@ -111,10 +113,15 @@
+             universal_newlines=True,
+             bufsize=1,
+         )
++        driver_intents = {}
++        if os.environ.get("COV2V_DISABLE_DRIVER_INTENTS", "").strip().lower() not in {"1", "true", "yes"}:
++            driver_intents = dict(self.config.get("driver_intents") or {})
++            driver_intents.update(self._load_scenario_driver_intents())
++        self.driver_intents = driver_intents
+         init_payload = {
+             "type": "init",
+             "gemini_config": self._build_gemini_config(),
+-            "driver_intents": self.config.get("driver_intents", {}),
++            "driver_intents": driver_intents,
+         }
+         self._debug_print(
+             "starting worker provider=%s model=%s mode=%s strategy=%s observations=%s"
+@@ -126,10 +133,43 @@
+                 init_payload["gemini_config"].get("use_other_vehicle_observations", True),
+             )
+         )
++        if driver_intents:
++            self._debug_print("driver_intents loaded for: %s" % ", ".join(sorted(driver_intents)))
+         response = self._request(init_payload, timeout_sec=self.request_timeout_sec)
+         if response.get("status") != "ok":
+             raise RuntimeError(response.get("message", "failed to initialize cov2v worker"))
+ 
++    def _current_scenario_name(self):
++        routes_dir = os.environ.get("ROUTES_DIR") or os.environ.get("ROUTES")
++        if not routes_dir:
++            return None
++        return Path(routes_dir).name
++
++    def _load_scenario_driver_intents(self):
++        driver_intents_path = self.config.get("driver_intents_path")
++        if not driver_intents_path:
++            return {}
++        scenario_name = self._current_scenario_name()
++        if not scenario_name:
++            return {}
++
++        resolved_path = self._worker_cwd / driver_intents_path
++        if not resolved_path.exists():
++            return {}
++
++        with open(str(resolved_path), "r") as file_obj:
++            all_scenarios = yaml.safe_load(file_obj) or {}
++        utterances = all_scenarios.get(scenario_name) or {}
++
++        return {
++            str(vehicle_id): {
++                "intent_type": "passenger_declared",
++                "justification": str(utterance).strip(),
++            }
++            for vehicle_id, utterance in utterances.items()
++            if str(utterance).strip()
++        }
++
+     def _build_gemini_config(self):
+         provider = str(self.config.get("provider", "gemini")).strip().lower() or "gemini"
+         if provider == "qwen":

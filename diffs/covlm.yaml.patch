@@ -1,0 +1,14 @@
+--- a/simulation/leaderboard/team_code/agent_config/covlm.yaml
++++ b/simulation/leaderboard/team_code/agent_config/covlm.yaml
+@@ -104,6 +104,11 @@
+     retry_wait_sec: 10.0
+     retry_attempts: 0
+     jpeg_quality: 85
++    # Per-scenario passenger utterances, looked up by the Interdrive route
++    # directory name from the ROUTES_DIR env var that eval_driving.sh exports,
++    # then merged into driver_intents below (this file wins on any vehicle id
++    # present in both).
++    driver_intents_path: simulation/leaderboard/team_code/agent_config/driver_intents_nav.yaml
+     driver_intents:
+         veh_0:
+ #            intent_type: medical_emergency

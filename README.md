@@ -1,0 +1,56 @@
+# Navigation-intent passenger utterances for CoVLM / InterDrive
+
+InterDrive r1-r46 with passenger utterances whose destination follows from the
+words, keeping each vehicle's original urgency tier. 175 vehicles, one sentence
+each.
+
+## Install
+
+```bash
+bash apply.sh /path/to/covlm-agent-main/CoLMDriver-main
+```
+
+Then add one line to the `cov2v` section of
+`simulation/leaderboard/team_code/agent_config/covlm.yaml`, next to `jpeg_quality`:
+
+```yaml
+    driver_intents_path: simulation/leaderboard/team_code/agent_config/driver_intents_nav.yaml
+```
+
+## Run
+
+From the CoLMDriver-main root, in the CARLA environment, CARLA already running.
+All 46 routes:
+
+```bash
+# args: cuda  port  method  latency  scenario_type  [route ids]
+ROUTE_SUFFIX=_nav bash scripts/eval/eval_mode.sh 0 2000 covlm ideal Interdrive_no_npc
+
+# baseline, no passenger utterances
+COV2V_DISABLE_DRIVER_INTENTS=1 ROUTE_SUFFIX=_nav \
+    bash scripts/eval/eval_mode.sh 0 2000 covlm ideal Interdrive_no_npc
+```
+
+Results go to `results/results_driving_<tag>/`.
+
+Notes:
+- `ROUTE_SUFFIX` is what this patch adds to `eval_mode.sh`; without it the
+  script behaves exactly as upstream and runs the original routes.
+- To go back to the original utterances, point `driver_intents_path` at
+  `driver_intents.yaml`, or delete the line to run with none.
+
+## What this installs
+
+| path | |
+|---|---|
+| `add/.../agent_config/driver_intents_nav.yaml` | new — the 175 sentences, keyed by route directory and vehicle |
+| `add/.../data/Interdrive/r*_nav/` | new — 46 route directories matching the sentences |
+| `replace/.../cov2v_bridge.py` | **required** — loads `driver_intents_path` per scenario, keyed by `ROUTES_DIR` |
+| `replace/cov2v/prompting.py` | **required** — drops `urgency level` / `priority bonus` from the prompt when they are 0 |
+| `replace/scripts/eval/eval_mode.sh` | adds `ROUTE_SUFFIX`, one line; without it the script is unchanged |
+| `replace/.../covlm_agent.py` | recommended — uses the loaded intents, logs `priority_score` |
+
+`apply.sh` backs up each replaced file as `<name>.orig_backup`. `covlm.yaml` is
+not overwritten (your API keys live there); `config/covlm.yaml.example` is the
+finished file and `diffs/` has the per-file diffs against the untouched repo.
+Authentication is unchanged from upstream — set `gemini_api_key` as usual.

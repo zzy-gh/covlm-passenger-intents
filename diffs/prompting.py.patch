@@ -1,0 +1,19 @@
+--- a/cov2v/prompting.py
++++ b/cov2v/prompting.py
+@@ -144,11 +144,11 @@
+     if intent is None:
+         return ""
+ 
+-    parts = [
+-        f"driver_intent is {intent.intent_type}",
+-        f"urgency level is {int(intent.urgency_level)}",
+-        f"requested priority bonus is {int(intent.requested_priority_bonus)}",
+-    ]
++    parts = [f"driver_intent is {intent.intent_type}"]
++    if intent.urgency_level:
++        parts.append(f"urgency level is {int(intent.urgency_level)}")
++    if intent.requested_priority_bonus:
++        parts.append(f"requested priority bonus is {int(intent.requested_priority_bonus)}")
+     justification = str(intent.justification).strip()
+     if justification:
+         parts.append(f"justification: {justification}")

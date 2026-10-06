@@ -1,0 +1,22 @@
+--- a/scripts/eval/eval_mode.sh
++++ b/scripts/eval/eval_mode.sh
+@@ -6,6 +6,10 @@
+ # $4: inference latency (ideal/realtime; ignored for autopilot)
+ # $5: scenario type (Interdrive_all/Interdrive_npc/Interdrive_no_npc)
+ # $6: specific route IDs to run (comma-separated numbers, optional, e.g., 1,2,3)
++#
++# ROUTE_SUFFIX env var (optional): appended to every route name, so a parallel
++# set of route directories can be run with the same route list. Use
++# ROUTE_SUFFIX=_nav for the navigation-intent routes.
+ 
+ # Full route list
+ full_route_list=("r1_town05_ins_c:2" "r2_town05_ins_c:2" "r3_town05_ins_c:2" "r4_town06_ins_c:2" "r5_town06_ins_c:2" "r6_town07_ins_c:2" "r7_town05_ins_ss:2" "r8_town05_ins_ss:2" "r9_town06_ins_ss:2" "r10_town07_ins_ss:2" "r11_town05_ins_sl:2" "r12_town06_ins_sl:2" "r13_town05_ins_sl:2" "r14_town07_ins_sl:2" "r15_town07_ins_sl:2" "r16_town05_ins_sl:2" "r17_town05_ins_sr:2" "r18_town05_ins_sr:2" "r19_town05_ins_sr:2" "r20_town06_ins_sr:2" "r21_town07_ins_sr:2" "r22_town07_ins_sr:2" "r23_town05_ins_oppo:3" "r24_town05_ins_rl:3" "r25_town05_ins_crosschange:3" "r26_town05_ins_chaos:6" "r27_town06_hw_merge:3" "r28_town06_hw_c:6" "r29_town06_hw_merge:4" "r30_town06_hw_merge:4" "r31_town05_ins_oppo:4" "r32_town05_ins_oppo:4" "r33_town05_ins_rl:4" "r34_town05_ins_rl:4" "r35_town05_ins_crosschange:4" "r36_town05_ins_crosschange:4" "r37_town05_ins_chaos:8" "r38_town05_ins_chaos:8" "r39_town06_hw_c:8" "r40_town06_hw_c:8" "r41_town05_ins_oppo:4" "r42_town05_ins_rl:4" "r43_town05_ins_crosschange:4" "r44_town05_ins_chaos:8" "r45_town06_hw_merge:4" "r46_town06_hw_c:7")
+@@ -164,7 +168,7 @@
+     echo "Running scenario: $scenario"
+     for route_info in "${route_list[@]}"
+     do
+-        route_name=$(echo $route_info | cut -d":" -f1)
++        route_name=$(echo $route_info | cut -d":" -f1)${ROUTE_SUFFIX:-}
+         vehicle_count=$(echo $route_info | cut -d":" -f2)
+         echo "Route Index: $route_name"
+         echo "Vehicle Count: $vehicle_count"

@@ -1,0 +1,72 @@
+--- a/simulation/leaderboard/team_code/covlm_agent.py
++++ b/simulation/leaderboard/team_code/covlm_agent.py
+@@ -118,6 +118,7 @@
+         self._ensure_covlm_save_dirs()
+         if self._cov2v_enabled:
+             self._cov2v_bridge = CoV2VBridge(self.cov2v_config)
++            self._cov2v_driver_intents = self._cov2v_bridge.driver_intents or self._cov2v_driver_intents
+ 
+     def _ensure_covlm_save_dirs(self):
+         if self.save_path is None:
+@@ -1006,6 +1007,17 @@
+             return None
+         return vehicle_num
+ 
++    def _priority_for_vehicle(self, vehicle_num):
++        discussion_process = self.latest_discussion_process
++        if not isinstance(discussion_process, dict):
++            return None
++        vehicle_id = "veh_%d" % vehicle_num
++        for group in discussion_process.get("group_discussions", []):
++            for item in group.get("priorities", []):
++                if str(item.get("vehicle_id", "")) == vehicle_id:
++                    return item
++        return None
++
+     def _append_cov2v_vehicle_debug_line(self, lines, vehicle_num, controls, target_speeds, indent="  "):
+         ego_data = self.latest_ego_data[vehicle_num]
+         control = controls[vehicle_num] if vehicle_num < len(controls) else None
+@@ -1018,8 +1030,15 @@
+             reason = reason[:177] + "..."
+         observations = result.get("cooperative_observations", [])
+         target_speed = target_speeds[vehicle_num] if vehicle_num < len(target_speeds) else 0.0
++        priority = self._priority_for_vehicle(vehicle_num)
++        priority_str = ""
++        if priority is not None:
++            priority_str = " | priority_score=%s conflict=%s" % (
++                priority.get("priority_score", "?"),
++                priority.get("conflict_detected", "?"),
++            )
+         lines.append(
+-            "%sveh_%d | pos=(%.1f,%.1f,%.2f) v=%.2f intent=%s | target_speed_action=%s target_speed=%.2f | control=(steer=%.2f, throttle=%.2f, brake=%.2f)"
++            "%sveh_%d | pos=(%.1f,%.1f,%.2f) v=%.2f intent=%s | target_speed_action=%s target_speed=%.2f%s | control=(steer=%.2f, throttle=%.2f, brake=%.2f)"
+             % (
+                 indent,
+                 vehicle_num,
+@@ -1034,6 +1053,7 @@
+                 ),
+                 self.latest_target_speed_actions[vehicle_num],
+                 float(target_speed),
++                priority_str,
+                 float(control.steer),
+                 float(control.throttle),
+                 float(control.brake),
+@@ -1350,11 +1370,18 @@
+         payload = self.latest_target_speed_action_payloads[ego_id] or {}
+         reason = str(payload.get("reason", "")).strip() or "No VLM reason available."
+         risks = payload.get("key_risks", [])
++        priority = self._priority_for_vehicle(ego_id)
++        priority_line = (
++            "priority_score: %s (conflict=%s)" % (priority.get("priority_score", "?"), priority.get("conflict_detected", "?"))
++            if priority is not None
++            else "priority_score: n/a"
++        )
+ 
+         lines = [
+             "CoVLM Decision",
+             "vehicle: veh_%d" % ego_id,
+             "target_speed_action: %s" % action,
++            priority_line,
+             "route_intent: %s -> %s"
+             % (
+                 str(measurements.get("command_intent", "UNKNOWN")),
