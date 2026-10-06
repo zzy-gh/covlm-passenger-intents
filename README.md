@@ -64,8 +64,3 @@ not overwritten (your API keys live there), and `diffs/` has the per-file diffs
 against the untouched repo — use those instead of `replace/` if your checkout
 has its own changes to any of these files. Authentication is unchanged from
 upstream: set `gemini_api_key` as usual.
-
-Also upstream's own, and unrelated to these intents: `python_bin` in
-`covlm.yaml` points at the author's home directory, so set it to your
-`cov2v-gemini` environment, and `external_paths/carla_root` has to be a symlink
-to a CARLA 0.9.10 install.
